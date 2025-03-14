@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Profile{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-card">
+        <div class="avatar-section">
+            <img src="{{ user['avatar'] }}" alt="{{ user['username'] }}'s avatar" class="profile-avatar" id="preview-avatar">
+            
+            <div class="avatar-options">
+                <button class="btn-toggle" onclick="toggleAvatarOptions()">Đổi Avatar</button>
+                
+                <div class="avatar-popup" id="avatarPopup">
+                    <!-- Form cho avatar được tạo -->
+                    <form method="post" class="avatar-form">
+                        <input type="hidden" name="action" value="update_avatar">
+                        <input type="hidden" name="avatar_type" value="generated">
+                        <button type="submit" class="btn-avatar-option">Tạo Avatar Ngẫu nhiên</button>
+                    </form>
+
+                    <!-- Form cho upload ảnh -->
+                    <form method="post" class="avatar-form" enctype="multipart/form-data">
+                        <input type="hidden" name="action" value="update_avatar">
+                        <input type="hidden" name="avatar_type" value="upload">
+                        <div class="file-upload">
+                            <input type="file" name="file" id="file" accept="image/*" onchange="previewImage(this)">
+                            <label for="file" class="btn-avatar-option">Chọn ảnh </label>
+                        </div>
+                        <button type="submit" class="btn-upload" id="uploadBtn" style="display: none;">Upload</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-info">
+            <form method="post" class="profile-form">
+                <input type="hidden" name="action" value="update_profile">
+                
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" name="username" id="username" 
+                           value="{{ user['username'] }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Role</label>
+                    <span class="role-badge">{{ user['role'] }}</span>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">Cập nhật Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleAvatarOptions() {
+    const popup = document.getElementById('avatarPopup');
+    popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
+}
+
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            document.getElementById('preview-avatar').src = e.target.result;
+            document.getElementById('uploadBtn').style.display = 'block';
+        }
+        
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Ẩn popup khi click ra ngoài
+document.addEventListener('click', function(event) {
+    const popup = document.getElementById('avatarPopup');
+    const toggleBtn = document.querySelector('.btn-toggle');
+    if (!popup.contains(event.target) && !toggleBtn.contains(event.target)) {
+        popup.style.display = 'none';
+    }
+});
+</script>
+{% endblock %} 

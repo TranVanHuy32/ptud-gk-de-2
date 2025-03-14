@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Categories{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <div class="category-grid">
+    {% for category in categories %}
+      <div class="category-card" style="border-left-color: {{ category['color'] }}">
+        <div class="category-header">
+          <h2>{{ category['name'] }}</h2>
+          <span class="task-count">{{ category['task_count'] }} tasks</span>
+        </div>
+        
+        <div class="category-actions">
+          <a href="{{ url_for('category.update', id=category['id']) }}" class="btn-edit">Đổi tên</a>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %} 

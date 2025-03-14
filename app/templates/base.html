@@ -1,0 +1,40 @@
+<!doctype html>
+<title>{% block title %}{% endblock %} - Task Manager</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<nav>
+    <h1>
+        <a href="{{ url_for('index') }}" class="site-title">Task Manager</a>
+    </h1>
+    <ul>
+        {% if g.user %}
+            <li><a href="{{ url_for('user.profile') }}" class="user-profile">
+                <img src="{{ g.user['avatar'] }}" alt="avatar" class="nav-avatar">
+                <span>{{ g.user['username'] }}</span>
+            </a></li>
+            {% if g.user['role'] == 'admin' %}
+                <li><a href="{{ url_for('admin.options') }}">Admin</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('auth.logout') }}">Log Out</a></li>
+        {% else %}
+            <li><a href="{{ url_for('auth.register') }}">Register</a></li>
+            <li><a href="{{ url_for('auth.login') }}">Log In</a></li>
+        {% endif %}
+    </ul>
+</nav>
+
+<section class="content">
+    <header>
+        {% block header %}{% endblock %}
+    </header>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</section>

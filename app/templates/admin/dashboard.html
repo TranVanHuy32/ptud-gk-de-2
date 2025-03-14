@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Dashboard{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Tổng số công việc</h3>
+            <p class="stat-number">{{ total_tasks }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Tổng số người dùng</h3>
+            <p class="stat-number">{{ total_users }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Công việc đang thực hiện</h3>
+            <p class="stat-number">{{ tasks_in_progress }}</p>
+        </div>
+    </div>
+
+    <div class="dashboard-charts">
+        <div class="recent-tasks">
+            <h3>Công việc gần đây</h3>
+            <ul>
+                {% for task in recent_tasks %}
+                <li>
+                    <a href="{{ url_for('task.update', id=task['id']) }}">{{ task['title'] }}</a>
+                    <span>{{ task['created'].strftime('%d-%m-%Y') }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="top-users">
+            <h3>Người dùng tích cực</h3>
+            <ul>
+                {% for user in top_users %}
+                <li>
+                    {{ user['username'] }} - {{ user['task_count'] }} công việc
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %} 

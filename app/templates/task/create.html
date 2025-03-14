@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}New Task{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post" class="task-form">
+    <div class="form-group">
+      <label for="title">Title</label>
+      <input name="title" id="title" required>
+    </div>
+
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea name="description" id="description"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="assigned_to">Assign To</label>
+      <select name="assigned_to" id="assigned_to" required>
+        <option value="">Select user...</option>
+        {% for user in users %}
+          <option value="{{ user['id'] }}">{{ user['username'] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="category_id">Category</label>
+      <select name="category_id" id="category_id">
+        <option value="">No category</option>
+        {% for category in categories %}
+          <option value="{{ category['id'] }}" 
+                  data-color="{{ category['color'] }}">{{ category['name'] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-actions">
+      <input type="submit" value="Create Task" class="btn-submit">
+      <a href="{{ url_for('task.index') }}" class="btn-cancel">Cancel</a>
+    </div>
+  </form>
+{% endblock %} 

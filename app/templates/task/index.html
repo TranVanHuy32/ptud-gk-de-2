@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Tasks{% endblock %}</h1>
+  {% if g.user %}
+    <a class="action" href="{{ url_for('task.create') }}">New Task</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  <div class="task-grid">
+    {% for task in tasks %}
+      <div class="task-card {{ task['status'] }}">
+        <div class="card-header">
+          <h2>{{ task['title'] }}</h2>
+          <span class="status-badge">{{ task['status'] }}</span>
+        </div>
+        
+        <div class="card-body">
+          <p class="task-description">{{ task['description'] }}</p>
+          
+          <div class="task-meta">
+            <div class="meta-item">
+              <span class="meta-label">Assigned to:</span>
+              <span class="meta-value">{{ task['assigned_name'] }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Created by:</span>
+              <span class="meta-value">{{ task['creator_name'] }}</span>
+            </div>
+            {% if task['category_name'] %}
+              <div class="meta-item">
+                <span class="meta-label">Category:</span>
+                <span class="category-badge" 
+                      style="background-color: {{ task['category_color'] }}20; 
+                             color: {{ task['category_color'] }}">
+                  {{ task['category_name'] }}
+                </span>
+              </div>
+            {% endif %}
+            <div class="meta-item">
+              <span class="meta-label">Created:</span>
+              <span class="meta-value">{{ task['created'].strftime('%Y-%m-%d %H:%M') }}</span>
+            </div>
+            {% if task['finished'] %}
+              <div class="meta-item">
+                <span class="meta-label">Finished:</span>
+                <span class="meta-value">{{ task['finished'].strftime('%Y-%m-%d %H:%M') }}</span>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="card-actions">
+          {% if g.user['role'] == 'admin' or g.user['id'] == task['created_by'] %}
+            <a href="{{ url_for('task.update', id=task['id']) }}" class="btn-edit">Edit</a>
+            <form action="{{ url_for('task.delete', id=task['id']) }}" method="post" class="inline-form">
+              <button class="btn-delete" onclick="return confirm('Are you sure?');">Delete</button>
+            </form>
+          {% elif g.user['id'] == task['assigned_to'] %}
+            <a href="{{ url_for('task.update', id=task['id']) }}" class="btn-edit">Update Status</a>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <style>
+    .task-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .task-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 15px;
+      background: #f8f9fa;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .task-description {
+      padding: 15px;
+      margin: 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .task-meta {
+      padding: 15px;
+    }
+
+    .meta-item {
+      margin: 8px 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .meta-label {
+      font-weight: bold;
+      min-width: 100px;
+      color: #666;
+    }
+
+    .meta-value {
+      color: #333;
+    }
+
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.8em;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .task-card.pending {
+      border-left: 5px solid #ffd700;
+    }
+
+    .task-card.in-progress {
+      border-left: 5px solid #1e90ff;
+    }
+
+    .task-card.completed {
+      border-left: 5px solid #32cd32;
+    }
+
+    .category-badge {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.8em;
+    }
+
+    .inline-form {
+      display: inline;
+    }
+    
+    .card-actions {
+      padding: 15px;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn-edit, .btn-delete {
+      padding: 5px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9em;
+      border: none;
+    }
+
+    .btn-edit {
+      background: #377ba8;
+      color: white;
+      text-decoration: none;
+    }
+
+    .btn-delete {
+      background: #dc3545;
+      color: white;
+    }
+
+    .btn-edit:hover {
+      background: #2c6490;
+    }
+
+    .btn-delete:hover {
+      background: #c82333;
+    }
+  </style>
+{% endblock %} 

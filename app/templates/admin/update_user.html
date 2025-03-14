@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Cập nhật người dùng</h1>
+
+<form method="POST">
+    <label for="username">Username:</label>
+    <input type="text" name="username" id="username" value="{{ user.username }}" required><br>
+
+    <label for="role">Role:</label>
+    <select name="role" id="role">
+        <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
+        <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+    </select><br>
+    <button type="submit">Cập nhật</button>
+</form>
+
+{% if error %}
+<div class="error">{{ error }}</div>
+{% endif %}
+
+{% endblock %}

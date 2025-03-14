@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Edit Task{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="task-detail">
+  <form method="post" class="task-form">
+    <div class="form-group">
+      <label for="title">Title</label>
+      <input name="title" id="title" value="{{ request.form['title'] or task['title'] }}" required>
+    </div>
+
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea name="description" id="description">{{ request.form['description'] or task['description'] }}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="status">Status</label>
+      <select name="status" id="status" required>
+        <option value="pending" {% if task['status'] == 'pending' %}selected{% endif %}>Pending</option>
+        <option value="in-progress" {% if task['status'] == 'in-progress' %}selected{% endif %}>In Progress</option>
+        <option value="completed" {% if task['status'] == 'completed' %}selected{% endif %}>Completed</option>
+      </select>
+    </div>
+
+    <div class="meta-info">
+      <p><strong>Created by:</strong> {{ task['creator_name'] }}</p>
+      <p><strong>Assigned to:</strong> {{ task['assigned_name'] }}</p>
+      <p><strong>Created:</strong> {{ task['created'].strftime('%Y-%m-%d %H:%M') }}</p>
+      {% if task['finished'] %}
+        <p><strong>Finished:</strong> {{ task['finished'].strftime('%Y-%m-%d %H:%M') }}</p>
+      {% endif %}
+      {% if task['category_name'] %}
+        <p><strong>Category:</strong> 
+          <span class="category-badge" style="background-color: {{ task['category_color'] }}20; color: {{ task['category_color'] }}">
+            {{ task['category_name'] }}
+          </span>
+        </p>
+      {% endif %}
+    </div>
+
+    <div class="form-actions">
+      <input type="submit" value="Save Changes" class="btn-submit">
+      <a href="{{ url_for('task.index') }}" class="btn-cancel">Cancel</a>
+    </div>
+  </form>
+
+  {% if g.user['id'] == task['created_by'] %}
+    <form action="{{ url_for('task.delete', id=task['id']) }}" method="post" class="delete-form">
+      <input class="btn-delete" type="submit" value="Delete Task" onclick="return confirm('Are you sure?');">
+    </form>
+  {% endif %}
+</div>
+{% endblock %} 

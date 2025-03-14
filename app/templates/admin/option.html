@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Admin Options{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="admin-options">
+    <div class="option-card">
+        <h2>Quản lý người dùng</h2>
+        <p>Xem danh sách, thêm, sửa, xóa và quản lý người dùng</p>
+        <a href="{{ url_for('admin.users') }}" class="btn-option">
+            <i class="fas fa-users"></i>
+            Quản lý Users
+        </a>
+    </div>
+
+    <div class="option-card">
+        <h2>Dashboard</h2>
+        <p>Xem thống kê và báo cáo tổng quan của hệ thống</p>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn-option">
+            <i class="fas fa-chart-bar"></i>
+            Xem Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Quản lý người dùng</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.id }}</td>  <td>{{ user.username }}</td> <td>{{ user.role }}</td> <td>{% if user.is_blocked %}Đã khóa{% else %}Hoạt động{% endif %}</td> <td>
+                <a href="{{ url_for('admin.update_user', id=user.id) }}">Sửa</a> <form method="POST" action="{{ url_for('admin.delete_user', id=user.id) }}">  <button type="submit">Xóa</button>
+                </form>
+                <form method="POST" action="{{ url_for('admin.block_user', id=user.id) }}">  <button type="submit" {% if user.is_blocked %}disabled{% endif %}>Khóa</button>
+                </form>
+                <form method="POST" action="{{ url_for('admin.unblock_user', id=user.id) }}">  <button type="submit" {% if not user.is_blocked %}disabled{% endif %}>Mở khóa</button>
+                </form>
+                <form method="POST" action="{{ url_for('admin.reset_password', id=user.id) }}">  <button type="submit">Reset mật khẩu</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{{ url_for('admin.create_user') }}">Tạo người dùng mới</a>
+{% endblock %}

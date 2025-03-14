@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Đổi tên "{{ category['name'] }}"{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post" class="category-form">
+    <div class="form-group">
+      <label for="name">Tên mới</label>
+      <input name="name" id="name" value="{{ request.form['name'] or category['name'] }}" required>
+    </div>
+
+    <div class="form-group">
+      <label>Màu sắc</label>
+      <div class="color-preview" style="background-color: {{ category['color'] }}"></div>
+    </div>
+
+    <div class="form-actions">
+      <input type="submit" value="Lưu" class="btn-submit">
+      <a href="{{ url_for('category.index') }}" class="btn-cancel">Hủy</a>
+    </div>
+  </form>
+
+  <form action="{{ url_for('category.delete', id=category['id']) }}" method="post" class="delete-form">
+    <input class="btn-delete" type="submit" value="Delete" 
+           onclick="return confirm('Are you sure? Tasks in this category will be uncategorized.');">
+  </form>
+{% endblock %} 
