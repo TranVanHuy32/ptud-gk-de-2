@@ -19,7 +19,9 @@
 
     <div class="form-group">
       <label for="status">Status</label>
-      <select name="status" id="status" required>
+      <select name="status" id="status" class="status-select" required
+              onchange="updateStatusColor(this)"
+              style="background-color: {{ get_status_color(task['status']) }}">
         <option value="pending" {% if task['status'] == 'pending' %}selected{% endif %}>Pending</option>
         <option value="in-progress" {% if task['status'] == 'in-progress' %}selected{% endif %}>In Progress</option>
         <option value="completed" {% if task['status'] == 'completed' %}selected{% endif %}>Completed</option>
@@ -48,10 +50,89 @@
     </div>
   </form>
 
-  {% if g.user['id'] == task['created_by'] %}
+  {% if g.user['id'] == task['created_by'] or g.user['role'] == 'admin' %}
     <form action="{{ url_for('task.delete', id=task['id']) }}" method="post" class="delete-form">
       <input class="btn-delete" type="submit" value="Delete Task" onclick="return confirm('Are you sure?');">
     </form>
   {% endif %}
 </div>
+
+<script>
+function updateStatusColor(selectElement) {
+    const colors = {
+        'pending': '#ffd700',
+        'in-progress': '#1e90ff',
+        'completed': '#32cd32'
+    };
+    selectElement.style.backgroundColor = colors[selectElement.value];
+}
+</script>
+
+<style>
+.status-select {
+    padding: 8px 15px;
+    border-radius: 20px;
+    border: none;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.status-select option {
+    background-color: white;
+    color: black;
+    font-weight: normal;
+}
+
+.meta-info {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.meta-info p {
+    margin: 5px 0;
+}
+
+.form-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.btn-submit, .btn-cancel, .btn-delete {
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.btn-submit {
+    background: #377ba8;
+    color: white;
+}
+
+.btn-cancel {
+    background: #6c757d;
+    color: white;
+    text-decoration: none;
+}
+
+.btn-delete {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-submit:hover { background: #2c6490; }
+.btn-cancel:hover { background: #5a6268; }
+.btn-delete:hover { background: #c82333; }
+
+.delete-form {
+    margin-top: 20px;
+}
+</style>
 {% endblock %} 

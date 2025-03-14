@@ -10,10 +10,23 @@
 {% block content %}
   <div class="task-grid">
     {% for task in tasks %}
-      <div class="task-card {{ task['status'] }}">
+      <div class="task-card {{ task['status'] }}" id="task-{{ task['id'] }}">
         <div class="card-header">
           <h2>{{ task['title'] }}</h2>
-          <span class="status-badge">{{ task['status'] }}</span>
+          {% if g.user and (g.user['id'] == task['assigned_to'] or g.user['id'] == task['created_by'] or g.user['role'] == 'admin') %}
+            <select class="status-select" 
+                    data-task-id="{{ task['id'] }}" 
+                    onchange="updateTaskStatus(this)"
+                    style="background-color: {{ get_status_color(task['status']) }}">
+              <option value="pending" {% if task['status'] == 'pending' %}selected{% endif %}>Pending</option>
+              <option value="in-progress" {% if task['status'] == 'in-progress' %}selected{% endif %}>In Progress</option>
+              <option value="completed" {% if task['status'] == 'completed' %}selected{% endif %}>Completed</option>
+            </select>
+          {% else %}
+            <span class="status-badge" style="background-color: {{ get_status_color(task['status']) }}">
+              {{ task['status'] }}
+            </span>
+          {% endif %}
         </div>
         
         <div class="card-body">
@@ -42,12 +55,14 @@
               <span class="meta-label">Created:</span>
               <span class="meta-value">{{ task['created'].strftime('%Y-%m-%d %H:%M') }}</span>
             </div>
-            {% if task['finished'] %}
-              <div class="meta-item">
-                <span class="meta-label">Finished:</span>
-                <span class="meta-value">{{ task['finished'].strftime('%Y-%m-%d %H:%M') }}</span>
-              </div>
-            {% endif %}
+            <div class="meta-item finished-time" {% if not task['finished'] %}style="display: none;"{% endif %}>
+              <span class="meta-label">Finished:</span>
+              <span class="meta-value">
+                {% if task['finished'] %}
+                  {{ task['finished'].strftime('%Y-%m-%d %H:%M') }}
+                {% endif %}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -57,13 +72,44 @@
             <form action="{{ url_for('task.delete', id=task['id']) }}" method="post" class="inline-form">
               <button class="btn-delete" onclick="return confirm('Are you sure?');">Delete</button>
             </form>
-          {% elif g.user['id'] == task['assigned_to'] %}
-            <a href="{{ url_for('task.update', id=task['id']) }}" class="btn-edit">Update Status</a>
           {% endif %}
         </div>
       </div>
     {% endfor %}
   </div>
+
+  <script>
+    function updateTaskStatus(selectElement) {
+      const taskId = selectElement.dataset.taskId;
+      const newStatus = selectElement.value;
+      const taskCard = document.getElementById(`task-${taskId}`);
+
+      const formData = new FormData();
+      formData.append('status', newStatus);
+
+      fetch(`/task/${taskId}/update_status`, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          // Cập nhật màu của select
+          selectElement.style.backgroundColor = data.color;
+          
+          // Cập nhật class của task card
+          taskCard.className = `task-card ${data.new_status}`;
+          
+          // Thêm hiệu ứng khi thay đổi status
+          taskCard.style.animation = 'statusChange 0.3s';
+          setTimeout(() => {
+            taskCard.style.animation = '';
+          }, 300);
+        }
+      })
+      .catch(error => console.error('Error:', error));
+    }
+  </script>
 
   <style>
     .task-grid {
@@ -123,15 +169,15 @@
     }
 
     .task-card.pending {
-      border-left: 5px solid #ffd700;
+      border-left-color: #ffd700;
     }
 
     .task-card.in-progress {
-      border-left: 5px solid #1e90ff;
+      border-left-color: #1e90ff;
     }
 
     .task-card.completed {
-      border-left: 5px solid #32cd32;
+      border-left-color: #32cd32;
     }
 
     .category-badge {
@@ -177,6 +223,31 @@
 
     .btn-delete:hover {
       background: #c82333;
+    }
+
+    .status-select {
+      padding: 5px 10px;
+      border-radius: 15px;
+      border: none;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .status-select option {
+      background-color: white;
+      color: black;
+    }
+
+    .task-card {
+      transition: border-left-color 0.3s;
+    }
+
+    @keyframes statusChange {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+      100% { transform: scale(1); }
     }
   </style>
 {% endblock %} 

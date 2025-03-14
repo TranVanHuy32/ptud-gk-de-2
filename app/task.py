@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for
+    Blueprint, flash, g, redirect, render_template, request, url_for, jsonify, current_app
 )
 from werkzeug.exceptions import abort
 from datetime import datetime
@@ -83,81 +83,83 @@ def create():
 @bp.route('/<int:id>/update', methods=('GET', 'POST'))
 @login_required
 def update(id):
-    task = get_task(id, check_author=False)  # Không check author để cho phép người được assign xem
+    task = get_task(id)
 
     if request.method == 'POST':
-        action = request.form.get('action')
+        title = request.form['title']
+        description = request.form['description']
+        status = request.form['status']
         error = None
 
-        if action == 'update_full':
-            # Chỉ người tạo mới được update đầy đủ
-            if g.user['id'] != task['created_by']:
-                abort(403)
+        if not title:
+            error = 'Title is required.'
 
-            title = request.form['title']
-            description = request.form['description']
-            assigned_to = request.form['assigned_to']
-            category_id = request.form['category_id'] or None
-            status = request.form['status']
-
-            if not title:
-                error = 'Title is required.'
-
-            if error is None:
-                db = get_db()
-                if status == 'completed' and task['status'] != 'completed':
-                    db.execute(
-                        'UPDATE task SET title = ?, description = ?, status = ?,'
-                        ' assigned_to = ?, category_id = ?, finished = CURRENT_TIMESTAMP'
-                        ' WHERE id = ?',
-                        (title, description, status, assigned_to, category_id, id)
-                    )
-                else:
-                    db.execute(
-                        'UPDATE task SET title = ?, description = ?, status = ?,'
-                        ' assigned_to = ?, category_id = ?'
-                        ' WHERE id = ?',
-                        (title, description, status, assigned_to, category_id, id)
-                    )
-                db.commit()
-                return redirect(url_for('task.index'))
-
-        elif action == 'update_status':
-            # Người được assign chỉ được update status
-            if g.user['id'] != task['assigned_to']:
-                abort(403)
-
-            status = request.form['status']
+        if error is None:
             db = get_db()
             if status == 'completed' and task['status'] != 'completed':
+                # Nếu chuyển sang completed, cập nhật thời gian hoàn thành
                 db.execute(
-                    'UPDATE task SET status = ?, finished = CURRENT_TIMESTAMP'
+                    'UPDATE task SET title = ?, description = ?, status = ?, finished = CURRENT_TIMESTAMP'
                     ' WHERE id = ?',
-                    (status, id)
+                    (title, description, status, id)
+                )
+            elif status != 'completed':
+                # Nếu chuyển từ completed sang trạng thái khác, xóa thời gian hoàn thành
+                db.execute(
+                    'UPDATE task SET title = ?, description = ?, status = ?, finished = NULL'
+                    ' WHERE id = ?',
+                    (title, description, status, id)
                 )
             else:
+                # Giữ nguyên thời gian hoàn thành nếu đã completed
                 db.execute(
-                    'UPDATE task SET status = ?'
+                    'UPDATE task SET title = ?, description = ?, status = ?'
                     ' WHERE id = ?',
-                    (status, id)
+                    (title, description, status, id)
                 )
             db.commit()
             return redirect(url_for('task.index'))
 
         flash(error)
 
-    # Lấy thông tin cần thiết cho form
-    db = get_db()
-    users = db.execute('SELECT id, username FROM user').fetchall()
-    categories = db.execute(
-        'SELECT * FROM category WHERE created_by = ?',
-        (task['created_by'],)  # Lấy categories của người tạo task
-    ).fetchall()
+    return render_template('task/update.html', task=task)
 
-    return render_template('task/update.html', 
-                         task=task, 
-                         users=users, 
-                         categories=categories)
+@bp.route('/<int:id>/update_status', methods=['POST'])
+@login_required
+def update_status(id):
+    task = get_task(id, check_author=False)
+    
+    # Cho phép người được assign, người tạo và admin cập nhật status
+    if g.user['id'] != task['assigned_to'] and g.user['id'] != task['created_by'] and g.user['role'] != 'admin':
+        abort(403)
+
+    new_status = request.form.get('status')
+    if new_status not in ['pending', 'in-progress', 'completed']:
+        abort(400)
+
+    db = get_db()
+    try:
+        if new_status == 'completed':
+            db.execute(
+                'UPDATE task SET status = ?, finished = CURRENT_TIMESTAMP'
+                ' WHERE id = ?',
+                (new_status, id)
+            )
+        else:
+            db.execute(
+                'UPDATE task SET status = ?, finished = NULL'
+                ' WHERE id = ?',
+                (new_status, id)
+            )
+        db.commit()
+        return jsonify({
+            'status': 'success',
+            'new_status': new_status,
+            'color': _get_status_color(new_status)
+        })
+    except:
+        db.rollback()
+        return jsonify({'status': 'error'}), 500
 
 def get_task(id, check_author=True):
     task = get_db().execute(
@@ -184,4 +186,17 @@ def delete(id):
     db = get_db()
     db.execute('DELETE FROM task WHERE id = ?', (id,))
     db.commit()
-    return redirect(url_for('task.index')) 
+    return redirect(url_for('task.index'))
+
+def _get_status_color(status):
+    colors = {
+        'pending': '#ffd700',
+        'in-progress': '#1e90ff',
+        'completed': '#32cd32'
+    }
+    return colors.get(status, '#666')
+
+# Đăng ký template global function
+@bp.app_template_global('get_status_color')
+def get_status_color(status):
+    return _get_status_color(status) 

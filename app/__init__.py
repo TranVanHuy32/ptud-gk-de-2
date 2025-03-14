@@ -43,6 +43,10 @@ def create_app(test_config=None):
     
     from . import task
     app.register_blueprint(task.bp)
+    
+    # Đăng ký template global function
+    app.template_global()(task.get_status_color)
+    
     app.add_url_rule('/', endpoint='index')
 
     from . import admin
